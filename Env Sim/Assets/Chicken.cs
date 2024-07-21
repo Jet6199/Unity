@@ -8,14 +8,14 @@ public class Chicken : MonoBehaviour
     public float hunger; // Current hunger level
     public float baseThirst = 100f; // Base maximum thirst
     public float thirst; // Current thirst level
-    public float hungerDecreaseRate = 1f; // Rate of hunger decrease per second
-    public float thirstDecreaseRate = 1.5f; // Rate of thirst decrease per second
-    public float detectionRadius = 20f; // Radius to detect food and water
+    public float hungerDecreaseRate; // Rate of hunger decrease per second
+    public float thirstDecreaseRate; // Rate of thirst decrease per second
+    public float detectionRadius; // Radius to detect food and water
     public GameObject detectionSphere; // GameObject that visualizes the detection radius
 
     private GameObject target; // Current target object (food or water)
     private Vector3 randomDirection; // Current direction of random wandering
-    private float wanderTimer; // Timer to control direction change in wandering
+    public float wanderTimer; // Timer to control direction change in wandering
 
     private bool isFindingFood = false;
     private bool isFindingWater = false;
@@ -24,8 +24,8 @@ public class Chicken : MonoBehaviour
     public Gender gender; // Gender of the chicken
 
     public GameObject chickenPrefab; // Prefab used to instantiate baby chickens
-    private float reproductionCooldown = 20f; // Time between reproductions
-    private float timeSinceLastReproduction = 0f; // Timer to track reproduction cooldown
+    public float reproductionCooldown = 20f; // Time between reproductions
+    public float timeSinceLastReproduction = 0f; // Timer to track reproduction cooldown
 
     void Start()
     {
@@ -33,8 +33,10 @@ public class Chicken : MonoBehaviour
         hunger = Random.Range(baseHunger * 0.5f, baseHunger); // Start with random hunger level
         thirst = Random.Range(baseThirst * 0.5f, baseThirst); // Start with random thirst level
         wanderTimer = Random.Range(5f, 15f); // Randomize initial wander timer
+        hungerDecreaseRate = Random.Range(1f, 2f);
+        thirstDecreaseRate = Random.Range(1.5f, 3.5f);
+        detectionRadius = Random.Range(5f, 20f);
 
-        gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female; // Randomly assign gender
         timeSinceLastReproduction = reproductionCooldown; // Start with the ability to reproduce immediately
 
     UpdateDetectionSphere();
