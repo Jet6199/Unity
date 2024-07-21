@@ -13,7 +13,8 @@ GameObject:
   - component: {fileID: 3903504863863791156}
   - component: {fileID: 2924433783682027385}
   - component: {fileID: 8879200523090382201}
-  - component: {fileID: 7582865591397987661}
+  - component: {fileID: -3082510342406558945}
+  - component: {fileID: 1975789735796960091}
   m_Layer: 0
   m_Name: Male Chicken
   m_TagString: Untagged
@@ -121,14 +122,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38ca34a3055604fa8ba38e665e77e92c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  baseMoveSpeed: 5
   moveSpeed: 5
+  baseHunger: 100
   hunger: 100
+  baseThirst: 100
   thirst: 100
   hungerDecreaseRate: 1
   thirstDecreaseRate: 1.5
-  detectionRadius: 10
+  detectionRadius: 20
   detectionSphere: {fileID: 0}
---- !u!114 &7582865591397987661
+  gender: 0
+  chickenPrefab: {fileID: 7298272242919687819}
+--- !u!54 &-3082510342406558945
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7298272242919687819}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1975789735796960091
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -137,9 +170,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 7298272242919687819}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4ec8a781244a84718992a870f7adccd0, type: 3}
+  m_Script: {fileID: 11500000, guid: e0794015a6ad8f147b20781683b8a7f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 4588459106707065791}
-  height: 10
-  followSpeed: 2

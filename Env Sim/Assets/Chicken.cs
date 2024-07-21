@@ -2,22 +2,43 @@ using UnityEngine;
 
 public class Chicken : MonoBehaviour
 {
-    public float moveSpeed = 5f;
-    public float hunger = 100f;
-    public float thirst = 100f;
-    public float hungerDecreaseRate = 1f; // per second
-    public float thirstDecreaseRate = 1.5f; // per second
-    public float detectionRadius = 10f; // Detection radius for finding food and water
-    public GameObject detectionSphere; // Reference to the detection sphere GameObject
+    public float baseMoveSpeed = 5f; // Base speed to be randomized
+    public float moveSpeed; // Actual movement speed
+    public float baseHunger = 100f; // Base maximum hunger
+    public float hunger; // Current hunger level
+    public float baseThirst = 100f; // Base maximum thirst
+    public float thirst; // Current thirst level
+    public float hungerDecreaseRate = 1f; // Rate of hunger decrease per second
+    public float thirstDecreaseRate = 1.5f; // Rate of thirst decrease per second
+    public float detectionRadius = 20f; // Radius to detect food and water
+    public GameObject detectionSphere; // GameObject that visualizes the detection radius
 
-    private GameObject target;
-    private Vector3 randomDirection;
-    private float wanderTimer = 5f; // Time to change direction
+    private GameObject target; // Current target object (food or water)
+    private Vector3 randomDirection; // Current direction of random wandering
+    private float wanderTimer; // Timer to control direction change in wandering
+
     private bool isFindingFood = false;
     private bool isFindingWater = false;
 
+    public enum Gender { Male, Female }
+    public Gender gender; // Gender of the chicken
+
+    public GameObject chickenPrefab; // Prefab used to instantiate baby chickens
+    private float reproductionCooldown = 20f; // Time between reproductions
+    private float timeSinceLastReproduction = 0f; // Timer to track reproduction cooldown
+
     void Start()
     {
+        moveSpeed = baseMoveSpeed * Random.Range(0.8f, 1.2f); // Randomize movement speed
+        hunger = Random.Range(baseHunger * 0.5f, baseHunger); // Start with random hunger level
+        thirst = Random.Range(baseThirst * 0.5f, baseThirst); // Start with random thirst level
+        wanderTimer = Random.Range(5f, 15f); // Randomize initial wander timer
+
+        gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female; // Randomly assign gender
+        timeSinceLastReproduction = reproductionCooldown; // Start with the ability to reproduce immediately
+
+    UpdateDetectionSphere();
+
         UpdateDetectionSphere();
     }
 
@@ -25,7 +46,17 @@ public class Chicken : MonoBehaviour
     {
         hunger -= hungerDecreaseRate * Time.deltaTime;
         thirst -= thirstDecreaseRate * Time.deltaTime;
+        timeSinceLastReproduction += Time.deltaTime; // Increment reproduction timer
 
+        // Update wandering behavior
+        wanderTimer -= Time.deltaTime;
+        if (wanderTimer <= 0)
+        {
+            randomDirection = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized * moveSpeed;
+            wanderTimer = Random.Range(5f, 15f); // Reset timer with a new random value
+        }
+
+        // Check for targets
         if (target == null || Vector3.Distance(transform.position, target.transform.position) > detectionRadius)
         {
             FindNewTarget();
@@ -40,28 +71,17 @@ public class Chicken : MonoBehaviour
         {
             Die();
         }
+        if (timeSinceLastReproduction >= reproductionCooldown && target != null && target.GetComponent<Chicken>().gender != gender)
+        {
+            Reproduce(target.GetComponent<Chicken>());
+        }
 
         UpdateDetectionSphere();
     }
 
-    void UpdateDetectionSphere()
-    {
-        if (detectionSphere != null)
-        {
-            detectionSphere.transform.localScale = Vector3.one * detectionRadius * 2; // Scale the sphere to the correct radius
-        }
-    }
-
     void WanderRandomly()
     {
-        wanderTimer -= Time.deltaTime;
-        if (wanderTimer <= 0)
-        {
-            randomDirection = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f));
-            wanderTimer = 5f;
-        }
-
-        transform.position += randomDirection * moveSpeed * Time.deltaTime;
+        transform.position += randomDirection * Time.deltaTime;
         transform.LookAt(transform.position + randomDirection);
     }
 
@@ -97,6 +117,25 @@ public class Chicken : MonoBehaviour
         }
     }
 
+    void Reproduce(Chicken mate)
+    {
+        if (Vector3.Distance(transform.position, mate.transform.position) < detectionRadius)
+        {
+            GameObject babyChicken = Instantiate(chickenPrefab, (transform.position + mate.transform.position) / 2, Quaternion.identity);
+            Chicken babyScript = babyChicken.GetComponent<Chicken>();
+
+            // Average out the parents' properties for the baby
+            babyScript.moveSpeed = (moveSpeed + mate.moveSpeed) / 2 * 0.5f; // Baby moves slower
+            babyScript.hungerDecreaseRate = (hungerDecreaseRate + mate.hungerDecreaseRate) / 2;
+            babyScript.thirstDecreaseRate = (thirstDecreaseRate + mate.thirstDecreaseRate) / 2;
+            babyScript.detectionRadius = detectionRadius * 0.5f; // Smaller detection radius for the baby
+
+            timeSinceLastReproduction = 0; // Reset reproduction timer
+            mate.timeSinceLastReproduction = 0; // Reset mate's timer as well
+        }
+    }
+
+
     void Eat()
     {
         Debug.Log("Eating food.");
@@ -129,6 +168,14 @@ public class Chicken : MonoBehaviour
             }
         }
         return nearest;
+    }
+
+    void UpdateDetectionSphere()
+    {
+        if (detectionSphere != null)
+        {
+            detectionSphere.transform.localScale = Vector3.one * detectionRadius * 2; // Adjust the scale according to the detection radius
+        }
     }
 
     void Die()

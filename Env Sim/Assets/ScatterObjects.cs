@@ -24,7 +24,8 @@ public class ScatterObjects : MonoBehaviour
         {
             float x = Random.Range(position.x, position.x + size.x);
             float z = Random.Range(position.z, position.z + size.z);
-            Vector3 spawnPosition = new Vector3(x, position.y + yOffset, z);
+            float y = terrain.SampleHeight(new Vector3(x, 0, z)) + yOffset; // Get the height of the terrain at this point and add yOffset
+            Vector3 spawnPosition = new Vector3(x, y, z);
             Instantiate(prefab, spawnPosition, Quaternion.identity);
         }
     }
