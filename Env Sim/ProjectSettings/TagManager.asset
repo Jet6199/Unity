@@ -8,6 +8,7 @@ TagManager:
   - Food
   - Male Chicken
   - Female Chicken
+  - Chicken
   layers:
   - Default
   - TransparentFX

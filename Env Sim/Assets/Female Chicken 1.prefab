@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: -4190983172177037929}
   m_Layer: 0
   m_Name: Female Chicken 1
-  m_TagString: Untagged
+  m_TagString: Female Chicken
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -132,8 +132,11 @@ MonoBehaviour:
   thirstDecreaseRate: 1.5
   detectionRadius: 20
   detectionSphere: {fileID: 0}
+  wanderTimer: 0
   gender: 1
-  chickenPrefab: {fileID: 7298272242919687819}
+  chickenPrefab: {fileID: 7298272242919687819, guid: 979ef29ac7352425c967e4dc1efdd941, type: 3}
+  reproductionCooldown: 20
+  timeSinceLastReproduction: 0
 --- !u!54 &-485931188576575411
 Rigidbody:
   m_ObjectHideFlags: 0

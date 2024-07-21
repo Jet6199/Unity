@@ -14,11 +14,13 @@ public class Chicken : MonoBehaviour
     public GameObject detectionSphere; // GameObject that visualizes the detection radius
 
     private GameObject target; // Current target object (food or water)
+    private GameObject targetChicken;
     private Vector3 randomDirection; // Current direction of random wandering
     public float wanderTimer; // Timer to control direction change in wandering
 
     private bool isFindingFood = false;
     private bool isFindingWater = false;
+    private bool isFindingMate = false;
 
     public enum Gender { Male, Female }
     public Gender gender; // Gender of the chicken
@@ -30,8 +32,8 @@ public class Chicken : MonoBehaviour
     void Start()
     {
         moveSpeed = baseMoveSpeed * Random.Range(0.8f, 1.2f); // Randomize movement speed
-        hunger = Random.Range(baseHunger * 0.5f, baseHunger); // Start with random hunger level
-        thirst = Random.Range(baseThirst * 0.5f, baseThirst); // Start with random thirst level
+        hunger = baseHunger; // Start with random hunger level
+        thirst = baseThirst; // Start with random thirst level
         wanderTimer = Random.Range(5f, 15f); // Randomize initial wander timer
         hungerDecreaseRate = Random.Range(1f, 2f);
         thirstDecreaseRate = Random.Range(1.5f, 3.5f);
@@ -52,11 +54,7 @@ public class Chicken : MonoBehaviour
 
         // Update wandering behavior
         wanderTimer -= Time.deltaTime;
-        if (wanderTimer <= 0)
-        {
-            randomDirection = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized * moveSpeed;
-            wanderTimer = Random.Range(5f, 15f); // Reset timer with a new random value
-        }
+        
 
         // Check for targets
         if (target == null || Vector3.Distance(transform.position, target.transform.position) > detectionRadius)
@@ -73,11 +71,37 @@ public class Chicken : MonoBehaviour
         {
             Die();
         }
-        if (timeSinceLastReproduction >= reproductionCooldown && target != null && target.GetComponent<Chicken>().gender != gender)
+
+        Chicken targetChicken = FindNearestChicken();
+        if (targetChicken != null && 
+            targetChicken.gender != gender && 
+            timeSinceLastReproduction > reproductionCooldown &&
+            Vector3.Distance(transform.position, targetChicken.transform.position) <= detectionRadius) // Check if the target is within the detection radius
         {
-            Reproduce(target.GetComponent<Chicken>());
+            Debug.Log("Attempting to reproduce...");
+            Reproduce(targetChicken);
+            targetChicken = null; // You might not need to nullify this here unless it's for a specific reason
         }
 
+
+        else
+        {
+            if (timeSinceLastReproduction < reproductionCooldown) {
+                Debug.Log("Reproduction cooldown not finished: " + timeSinceLastReproduction);
+            }
+            if (target == null) {
+                Debug.Log("No target found.");
+            } else if (targetChicken.gender == gender) {
+                Debug.Log(gender);
+                Debug.Log(targetChicken.gender);
+                Debug.Log("Same gender, cannot reproduce.");
+            }
+        }
+        if (target == null && wanderTimer <= 0)
+        {
+            randomDirection = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized * moveSpeed;
+            wanderTimer = Random.Range(5f, 15f); // Reset timer with a new random value
+        }
         UpdateDetectionSphere();
     }
 
@@ -94,15 +118,26 @@ public class Chicken : MonoBehaviour
             target = FindNearestTaggedObject("Food");
             isFindingFood = true;
             isFindingWater = false;
+            Debug.Log("Finding Food");
         }
         else if (thirst <= 60f && !isFindingWater)
         {
             target = FindNearestTaggedObject("Water");
             isFindingWater = true;
             isFindingFood = false;
+            Debug.Log("Finding Water");
+        }
+        // Only consider other chickens as potential reproduction targets
+        else if (timeSinceLastReproduction >= reproductionCooldown)
+        {
+            target = FindNearestTaggedObject("Chicken");
+            isFindingMate = true;
+            isFindingWater = false;
+            isFindingFood = false;
+            Debug.Log("Finding Mate");
         }
     }
-
+    
     void MoveToTarget()
     {
         transform.position = Vector3.MoveTowards(transform.position, target.transform.position, moveSpeed * Time.deltaTime);
@@ -121,21 +156,38 @@ public class Chicken : MonoBehaviour
 
     void Reproduce(Chicken mate)
     {
-        if (Vector3.Distance(transform.position, mate.transform.position) < detectionRadius)
+        float distance = Vector3.Distance(transform.position, mate.transform.position);
+        Debug.Log("Distance to mate: " + distance);
+        if (distance < detectionRadius)
         {
-            GameObject babyChicken = Instantiate(chickenPrefab, (transform.position + mate.transform.position) / 2, Quaternion.identity);
+            Vector3 spawnPosition = (transform.position + mate.transform.position) / 2;
+            GameObject babyChicken = Instantiate(chickenPrefab, spawnPosition, Quaternion.identity);
+            Debug.Log("Baby chicken created at " + spawnPosition);
+
             Chicken babyScript = babyChicken.GetComponent<Chicken>();
+            if (babyScript != null)
+            {
+                babyScript.moveSpeed = (moveSpeed + mate.moveSpeed) / 2 * 0.5f;
+                babyScript.hungerDecreaseRate = (hungerDecreaseRate + mate.hungerDecreaseRate) / 2;
+                babyScript.thirstDecreaseRate = (thirstDecreaseRate + mate.thirstDecreaseRate) / 2;
+                babyScript.detectionRadius = (detectionRadius + mate.detectionRadius) / 2 * 0.5f;
 
-            // Average out the parents' properties for the baby
-            babyScript.moveSpeed = (moveSpeed + mate.moveSpeed) / 2 * 0.5f; // Baby moves slower
-            babyScript.hungerDecreaseRate = (hungerDecreaseRate + mate.hungerDecreaseRate) / 2;
-            babyScript.thirstDecreaseRate = (thirstDecreaseRate + mate.thirstDecreaseRate) / 2;
-            babyScript.detectionRadius = detectionRadius * 0.5f; // Smaller detection radius for the baby
-
-            timeSinceLastReproduction = 0; // Reset reproduction timer
-            mate.timeSinceLastReproduction = 0; // Reset mate's timer as well
+                timeSinceLastReproduction = 0;
+                mate.timeSinceLastReproduction = 0;
+                isFindingMate = false;
+                babyScript = null;
+            }
+            else
+            {
+                Debug.LogError("Failed to assign baby script properties.");
+            }
+        }
+        else
+        {
+            Debug.Log("Mate not within reproduction distance.");
         }
     }
+
 
 
     void Eat()
@@ -171,6 +223,35 @@ public class Chicken : MonoBehaviour
         }
         return nearest;
     }
+
+    Chicken FindNearestChicken()
+    {
+        GameObject[] taggedChickens = GameObject.FindGameObjectsWithTag("Chicken");
+        Chicken nearestChicken = null;
+        float minDistance = Mathf.Infinity;
+        Vector3 currentPos = transform.position;
+
+        foreach (GameObject chickenObj in taggedChickens)
+        {
+            // Skip the current chicken to avoid detecting itself
+            if (chickenObj == this.gameObject) {
+                continue;
+            }
+
+            Chicken chicken = chickenObj.GetComponent<Chicken>();
+            if (chicken != null)
+            {
+                float dist = Vector3.Distance(chicken.transform.position, currentPos);
+                if (dist < minDistance && dist <= detectionRadius)
+                {
+                    nearestChicken = chicken;
+                    minDistance = dist;
+                }
+            }
+        }
+        return nearestChicken;
+    }
+
 
     void UpdateDetectionSphere()
     {
