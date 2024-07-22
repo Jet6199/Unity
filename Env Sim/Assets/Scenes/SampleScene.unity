@@ -543,7 +543,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ec8a781244a84718992a870f7adccd0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 1914789528}
+  target: {fileID: 1090923760}
   height: 20
   followSpeed: 2
 --- !u!114 &963194230
